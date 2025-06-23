@@ -1,4 +1,5 @@
 import random
+import logging
 from twitchio.ext import commands
 
 class PersonagemComando(commands.Cog):
@@ -12,14 +13,17 @@ class PersonagemComando(commands.Cog):
 
             db_connection = self.bot.db_connection
             if db_connection is None:
-                await ctx.send("Erro de conexão com o banco de dados. Tente novamente mais tarde.")
+                await ctx.send("❌ Erro de conexão com o banco de dados. Tente novamente mais tarde.")
                 return
 
-            cursor = db_connection.cursor()
-            cursor.execute("SELECT nome, descricao FROM personagens ORDER BY RANDOM() LIMIT 1")
-            personagem_info = cursor.fetchone()
+            with db_connection.cursor() as cursor:
+                cursor.execute("SELECT nome, descricao FROM personagens ORDER BY RANDOM() LIMIT 1")
+                personagem_info = cursor.fetchone()
 
-            if personagem_info:
+                if not personagem_info:
+                    await ctx.send("❌ Nenhum personagem foi encontrado para o comando.")
+                    return
+
                 personagem, descricao = personagem_info
                 porcentagem = random.randint(0, 100)
 
@@ -31,6 +35,7 @@ class PersonagemComando(commands.Cog):
                     AND max_porcentagem >= %s
                     ORDER BY RANDOM() LIMIT 1
                 """, (porcentagem, porcentagem))
+
                 mensagem_info = cursor.fetchone()
 
                 if mensagem_info:
@@ -42,12 +47,8 @@ class PersonagemComando(commands.Cog):
                     )
                     await ctx.send(mensagem)
                 else:
-                    await ctx.send(f"{alvo}, não encontramos uma mensagem adequada para essa compatibilidade.")
-            else:
-                await ctx.send("Nenhum personagem foi encontrado para o comando.")
-
-            cursor.close()
+                    await ctx.send(f"⚠️ {alvo}, não encontramos uma mensagem adequada para essa compatibilidade.")
 
         except Exception as e:
-            print(f"Erro ao executar o comando personagem: {e}")
-            await ctx.send("Ocorreu um erro ao processar o comando. Tente novamente mais tarde.")
+            logging.error(f"Erro ao executar o comando personagem: {e}")
+            await ctx.send("❌ Ocorreu um erro ao processar o comando. Tente novamente mais tarde.")

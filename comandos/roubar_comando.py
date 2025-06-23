@@ -1,85 +1,85 @@
 import random
-import time
 from twitchio.ext import commands
+from psycopg2.extras import DictCursor
 
 class RoubarComando(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.inventário = {
-            "Call of Juarez: Gunslinger": 'httppontocom',
-            "Tomb Raider: Underworld": 'anduspark',
-            "Star Wars: Bounty Hunter": 'waldir_br4z',
-            "Quake II": 'davizinho08davi',
-            "Neverwinter Nights: Enhanced": 'joseva48',
-            "Cristal do Space Hulk: Deathwing - Enhanced Edition.": 'davizinho08davi'
-        }
-        self.cooldown_ultimo_uso = 0  # Timestamp da última execução do comando
+        self.bots_excluidos = [
+            "streamelements", "nightbot", "creatisbot", "streamlabs", 
+            "botrecruta", "frgomes2", "kamayeru_", "xspringflowerx", 
+            "x2osso", "soundalerts!"
+        ]
 
     @commands.command(name='roubar')
     async def roubar(self, ctx):
-        try:
-            # Verifica se há prêmios distribuídos
-            prêmios_distribuídos = [presente for presente, dono in self.inventário.items() if dono is not None]
+        conn = self.bot.db_connection
+        cursor = conn.cursor(cursor_factory=DictCursor)
 
-            if not prêmios_distribuídos:
-                await ctx.send("🎁 Ainda não há presentes distribuídos para roubar. Aguarde um pouco mais! 🎁")
+        try:
+            cursor.execute("SELECT * FROM inventario_roubo WHERE dono IS NOT NULL")
+            premios = cursor.fetchall()
+
+            if not premios:
+                await ctx.send("🎁 Ainda não há prêmios distribuídos para roubar.")
                 return
 
-            # Escolhe um presente aleatório e transfere para outro usuário
-            presente_para_roubar = random.choice(prêmios_distribuídos)
-            antigo_dono = self.inventário[presente_para_roubar]
+            premio = random.choice(premios)
+            presente_nome = premio['presente']
+            antigo_dono = premio['dono']
 
-            # Lista de bots a serem excluídos
-            bots_excluídos = ["streamelements", "nightbot", "creatisbot", "streamlabs", "botrecruta","frgomes2","kamayeru_","xspringflowerx","x2osso","soundalerts!"]
-
-            # Obtém participantes do chat
-            participantes = [user.name for user in ctx.channel.chatters if
-                             user.name not in bots_excluídos and user.name != antigo_dono]
-
+            participantes = [u.name for u in ctx.channel.chatters if u.name != antigo_dono and u.name not in self.bots_excluidos]
             if not participantes:
-                await ctx.send("🚫 Não há participantes elegíveis no chat para transferir o prêmio! 🚫")
+                await ctx.send("🚫 Ninguém no chat pra receber o roubo! 🚫")
                 return
 
             novo_dono = random.choice(participantes)
-            self.inventário[presente_para_roubar] = novo_dono
 
-            await ctx.send(
-                f"💰 {ctx.author.name} roubou **{presente_para_roubar}** de {antigo_dono} e deu para {novo_dono}! 💰")
+            cursor.execute("UPDATE inventario_roubo SET dono = %s WHERE presente = %s", (novo_dono, presente_nome))
+            conn.commit()
+
+            await ctx.send(f"💰 {ctx.author.name} roubou **{presente_nome}** de {antigo_dono} e deu para {novo_dono}! 💰")
 
         except Exception as e:
-            print(f"Erro ao executar o comando roubar: {e}")
-            await ctx.send("Desculpe, ocorreu um erro ao processar seu pedido. Tente novamente mais tarde.")
+            print(f"Erro ao roubar presente: {e}")
+            await ctx.send("❌ Erro ao tentar roubar presente.")
+        finally:
+            cursor.close()
 
     @commands.command(name='prêmios')
-    async def prêmios(self, ctx):
-        try:
-            # Lista os prêmios e seus donos
-            prêmios_distribuídos = [f"**{presente}**: {dono}" for presente, dono in self.inventário.items() if
-                                    dono is not None]
+    async def premios(self, ctx):
+        conn = self.bot.db_connection
+        cursor = conn.cursor(cursor_factory=DictCursor)
 
-            if prêmios_distribuídos:
-                await ctx.send(f"🎁 **Prêmios atualmente distribuídos:** {', '.join(prêmios_distribuídos)}")
-            else:
-                await ctx.send("🎁 Não há prêmios distribuídos no momento!")
+        try:
+            cursor.execute("SELECT * FROM inventario_roubo WHERE dono IS NOT NULL")
+            premios = cursor.fetchall()
+
+            if not premios:
+                await ctx.send("🎁 Nenhum prêmio foi distribuído ainda.")
+                return
+
+            lista = [f"**{p['presente']}**: {p['dono']}" for p in premios]
+            await ctx.send("🎁 **Prêmios distribuídos:** " + ", ".join(lista))
+
         except Exception as e:
-            print(f"Erro ao executar o comando prêmios: {e}")
-            await ctx.send("Desculpe, ocorreu um erro ao processar seu pedido. Tente novamente mais tarde.")
+            print(f"Erro ao buscar prêmios: {e}")
+            await ctx.send("❌ Erro ao consultar prêmios.")
+        finally:
+            cursor.close()
 
     @commands.command(name='encerrar_roubo')
     async def encerrar_roubo(self, ctx):
+        conn = self.bot.db_connection
+        cursor = conn.cursor()
+
         try:
-            # Verifica se há prêmios distribuídos
-            prêmios_distribuídos = [presente for presente, dono in self.inventário.items() if dono is not None]
+            cursor.execute("UPDATE inventario_roubo SET dono = NULL")
+            conn.commit()
+            await ctx.send("🎁 Todos os prêmios foram retirados e a distribuição foi encerrada!")
 
-            if not prêmios_distribuídos:
-                await ctx.send("🎁 Não há prêmios para encerrar. Nenhum prêmio foi roubado ainda! 🎁")
-                return
-
-            # Reseta os prêmios
-            for presente in self.inventário:
-                self.inventário[presente] = None
-
-            await ctx.send("🎁 Todos os prêmios foram retirados e a distribuição foi encerrada! 🎁")
         except Exception as e:
-            print(f"Erro ao executar o comando encerrar_roubo: {e}")
-            await ctx.send("Desculpe, ocorreu um erro ao tentar encerrar a distribuição dos prêmios.")
+            print(f"Erro ao encerrar roubo: {e}")
+            await ctx.send("❌ Erro ao encerrar a distribuição dos prêmios.")
+        finally:
+            cursor.close()

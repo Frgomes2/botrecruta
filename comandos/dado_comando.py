@@ -1,63 +1,49 @@
 import logging
 import random
-import psycopg2
-import os
 from twitchio.ext import commands
-from dotenv import load_dotenv
 
-load_dotenv()
-
-# Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DadoComando(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        try:
-            self.db_connection = psycopg2.connect(
-                dbname=os.getenv("DB_NAME"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASSWORD"),
-                host=os.getenv("DB_HOST"),
-                port=os.getenv("DB_PORT")
-            )
-            self.db_cursor = self.db_connection.cursor()
-            self.criar_tabelas()
-        except Exception as err:
-            logging.error(f"Erro ao conectar no banco de dados: {err}")
-            self.db_connection = None
-            self.db_cursor = None
+        self.criar_tabelas()
 
     def criar_tabelas(self):
-        self.db_cursor.execute(""" 
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id_twitch VARCHAR(255) PRIMARY KEY,
-                nome_usuario VARCHAR(255),
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        self.db_cursor.execute(""" 
-            CREATE TABLE IF NOT EXISTS placar (
-                jogador_id VARCHAR(255),
-                adversario_id VARCHAR(255),
-                vitorias INT DEFAULT 0,
-                PRIMARY KEY (jogador_id, adversario_id)
-            )
-        """)
-        self.db_connection.commit()
+        try:
+            with self.bot.db_connection.cursor() as cursor:
+                cursor.execute(""" 
+                    CREATE TABLE IF NOT EXISTS usuarios (
+                        id_twitch VARCHAR(255) PRIMARY KEY,
+                        nome_usuario VARCHAR(255),
+                        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute(""" 
+                    CREATE TABLE IF NOT EXISTS placar (
+                        jogador_id VARCHAR(255),
+                        adversario_id VARCHAR(255),
+                        vitorias INT DEFAULT 0,
+                        PRIMARY KEY (jogador_id, adversario_id)
+                    )
+                """)
+            self.bot.db_connection.commit()
+        except Exception as err:
+            logging.error(f"Erro ao criar tabelas: {err}")
 
     @commands.command(name='ranking_dado')
     async def ranking_dado(self, ctx):
         try:
-            self.db_cursor.execute("""
-                SELECT u.nome_usuario, SUM(p.vitorias) AS vitorias
-                FROM placar p
-                JOIN usuarios u ON p.jogador_id = u.id_twitch
-                GROUP BY u.nome_usuario
-                ORDER BY vitorias DESC
-                LIMIT 3
-            """)
-            resultados = self.db_cursor.fetchall()
+            with self.bot.db_connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT u.nome_usuario, SUM(p.vitorias) AS vitorias
+                    FROM placar p
+                    JOIN usuarios u ON p.jogador_id = u.id_twitch
+                    GROUP BY u.nome_usuario
+                    ORDER BY vitorias DESC
+                    LIMIT 3
+                """)
+                resultados = cursor.fetchall()
 
             if not resultados:
                 await ctx.send("🚫 Não há jogadores registrados no ranking ainda.")
@@ -87,11 +73,12 @@ class DadoComando(commands.Cog):
                 await ctx.send(f"🚫 Usuário {nome_usuario} não encontrado.")
                 return
 
-            self.db_cursor.execute("SELECT SUM(vitorias) FROM placar WHERE jogador_id = %s", (id_usuario,))
-            vitorias = self.db_cursor.fetchone()[0] or 0
+            with self.bot.db_connection.cursor() as cursor:
+                cursor.execute("SELECT SUM(vitorias) FROM placar WHERE jogador_id = %s", (id_usuario,))
+                vitorias = cursor.fetchone()[0] or 0
 
-            self.db_cursor.execute("SELECT SUM(vitorias) FROM placar WHERE adversario_id = %s", (id_usuario,))
-            derrotas = self.db_cursor.fetchone()[0] or 0
+                cursor.execute("SELECT SUM(vitorias) FROM placar WHERE adversario_id = %s", (id_usuario,))
+                derrotas = cursor.fetchone()[0] or 0
 
             await ctx.send(f"📊 Placar de {nome_usuario}: {vitorias} vitórias e {derrotas} derrotas.")
 
@@ -101,10 +88,6 @@ class DadoComando(commands.Cog):
 
     @commands.command(name='dado')
     async def dado(self, ctx, *args):
-        if self.db_connection is None or self.db_cursor is None:
-            await ctx.send("❌ Erro de conexão com o banco de dados.")
-            return
-
         bots_excluidos = ["streamelements", "nightbot", "creatisbot", "streamlabs", "botrecruta"]
         participantes = [user.name for user in ctx.channel.chatters if user.name != ctx.author.name and user.name not in bots_excluidos]
 
@@ -138,19 +121,21 @@ class DadoComando(commands.Cog):
             await ctx.send(f"{ctx.author.name} tirou {numero_1} e {parceiro} tirou {numero_2}. Foi um empate! 🔥")
             return
 
-        self.db_cursor.execute("""
-            INSERT INTO placar (jogador_id, adversario_id, vitorias)
-            VALUES (%s, %s, 1)
-            ON CONFLICT (jogador_id, adversario_id)
-            DO UPDATE SET vitorias = placar.vitorias + 1
-        """, (vencedor_id, perdedor_id))
-        self.db_connection.commit()
+        with self.bot.db_connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO placar (jogador_id, adversario_id, vitorias)
+                VALUES (%s, %s, 1)
+                ON CONFLICT (jogador_id, adversario_id)
+                DO UPDATE SET vitorias = placar.vitorias + 1
+            """, (vencedor_id, perdedor_id))
 
-        self.db_cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_autor, id_parceiro))
-        v1 = self.db_cursor.fetchone()[0] or 0
+            cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_autor, id_parceiro))
+            v1 = cursor.fetchone()[0] or 0
 
-        self.db_cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_parceiro, id_autor))
-        v2 = self.db_cursor.fetchone()[0] or 0
+            cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_parceiro, id_autor))
+            v2 = cursor.fetchone()[0] or 0
+
+        self.bot.db_connection.commit()
 
         mensagem = (
             f"{ctx.author.name} tirou {numero_1}! 🎲 {parceiro} tirou {numero_2}! 🎲\n"
@@ -169,12 +154,13 @@ class DadoComando(commands.Cog):
 
     async def atualizar_usuario(self, id_twitch, nome_usuario):
         try:
-            self.db_cursor.execute("""
-                INSERT INTO usuarios (id_twitch, nome_usuario)
-                VALUES (%s, %s)
-                ON CONFLICT (id_twitch)
-                DO UPDATE SET nome_usuario = EXCLUDED.nome_usuario
-            """, (id_twitch, nome_usuario))
-            self.db_connection.commit()
+            with self.bot.db_connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO usuarios (id_twitch, nome_usuario)
+                    VALUES (%s, %s)
+                    ON CONFLICT (id_twitch)
+                    DO UPDATE SET nome_usuario = EXCLUDED.nome_usuario
+                """, (id_twitch, nome_usuario))
+            self.bot.db_connection.commit()
         except Exception as e:
             logging.error(f"Erro ao atualizar usuário: {e}")
