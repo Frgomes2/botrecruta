@@ -1,7 +1,7 @@
 import random
 import requests
 from twitchio.ext import commands
-import mysql.connector
+import psycopg2
 import os
 from dotenv import load_dotenv
 from datetime import datetime
@@ -54,19 +54,21 @@ class PokemonComando(commands.Cog):
         ]
 
     def connect_to_db(self):
-        """Conectar ao banco de dados MySQL."""
+        """Conectar ao banco de dados PostgreSQL."""
         try:
-            connection = mysql.connector.connect(
-                host=db_host,
-                user=db_user,
-                password=db_password,
-                database=db_name
+            connection = psycopg2.connect(
+                dbname=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                host=os.getenv("DB_HOST"),
+                port=os.getenv("DB_PORT")
             )
             print("Conexão com o banco de dados estabelecida com sucesso.")
             return connection
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             print(f"Erro ao conectar ao banco de dados: {err}")
             return None
+
 
     def save_pokemon(self, user, pokemon_id, pokemon_name, pokemon_rarity, attack, types, cap_avatar):
         """Salva o Pokémon capturado na base de dados, incluindo a URL da imagem."""
