@@ -1,5 +1,3 @@
-import os
-import psycopg2
 from twitchio.ext import commands
 
 voting_ended = True
@@ -9,18 +7,7 @@ votacao_id = None
 class VotacaoComando(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.conn = None
-        self.cursor = None
-        self.conectar_db()
-
-    def conectar_db(self):
-        self.conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT")
-        )
+        self.conn = bot.db_connection
         self.cursor = self.conn.cursor()
 
     def salvar_votacao(self, nome_votacao):
@@ -46,8 +33,8 @@ class VotacaoComando(commands.Cog):
         return 0
 
     def fechar_conexao(self):
-        self.cursor.close()
-        self.conn.close()
+        if self.cursor:
+            self.cursor.close()
 
     @commands.command(name='start_votos')
     async def start_votos(self, ctx, *, nome_votacao: str):
