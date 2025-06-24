@@ -1,10 +1,11 @@
 import os
-from urllib.parse import urlparse
-import psycopg2
 from twitchio.ext import commands
 from dotenv import load_dotenv
 
-# Importa seus comandos
+# Importa conexão separada
+from conexao import conectar_postgresql
+
+# Importa comandos
 from comandos.presentes_comando import PresentesComando
 from comandos.votacao_comando import VotacaoComando
 from comandos.tinder_comando import TinderComando
@@ -15,7 +16,7 @@ from comandos.personagem_comando import PersonagemComando
 from comandos.poke_comando import PokemonComando
 from comandos.roubar_comando import RoubarComando
 
-# Carrega variáveis do .env (caso em local)
+# Carrega variáveis .env (em dev/local)
 load_dotenv()
 
 # Twitch configs
@@ -23,18 +24,6 @@ token = os.getenv("TWITCH_TOKEN")
 client_id = os.getenv("TWITCH_CLIENT_ID")
 bot_nick = os.getenv("TWITCH_BOT_NICK")
 channel = os.getenv("TWITCH_CHANNEL")
-
-# Banco de dados - via DATABASE_URL
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    result = urlparse(database_url)
-    db_name = result.path.lstrip('/')
-    db_user = result.username
-    db_password = result.password
-    db_host = result.hostname
-    db_port = result.port
-else:
-    raise ValueError("DATABASE_URL não encontrada")
 
 # Verifica se configs estão completas
 variaveis_faltando = []
@@ -48,9 +37,9 @@ for nome, valor in {
         variaveis_faltando.append(nome)
 
 if variaveis_faltando:
-    raise ValueError(f"Faltam as seguintes variáveis no .env ou no Railway: {', '.join(variaveis_faltando)}")
+    raise ValueError(f"Faltam as seguintes variáveis no Railway ou .env: {', '.join(variaveis_faltando)}")
 
-# Classe principal do Bot
+# Classe principal do bot
 class MyBot(commands.Bot):
     def __init__(self):
         super().__init__(
@@ -60,22 +49,7 @@ class MyBot(commands.Bot):
             prefix="!fr",
             initial_channels=[channel]
         )
-        self.db_connection = self.connect_to_db()
-
-    def connect_to_db(self):
-        try:
-            conn = psycopg2.connect(
-                dbname=db_name,
-                user=db_user,
-                password=db_password,
-                host=db_host,
-                port=db_port
-            )
-            print("✅ Conexão com o banco de dados estabelecida.")
-            return conn
-        except psycopg2.Error as err:
-            print(f"❌ Erro ao conectar ao banco de dados: {err}")
-            return None
+        self.db_connection = conectar_postgresql()
 
     def close_db_connection(self):
         if self.db_connection:
@@ -108,6 +82,6 @@ bot.add_cog(PersonagemComando(bot))
 bot.add_cog(PokemonComando(bot))
 bot.add_cog(RoubarComando(bot))
 
-# Executa
+# Executa o bot
 if __name__ == "__main__":
     bot.run()
