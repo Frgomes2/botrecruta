@@ -1,34 +1,54 @@
 import os
-import psycopg2
 from urllib.parse import urlparse
 
+# Banco MySQL
+import mysql.connector
+
+# Banco PostgreSQL
+import psycopg2
+
 def conectar_postgresql():
-    database_url = os.getenv("DATABASE_URL")
+    print("🔍 DEBUG ENV:", os.getenv("ENV"))
 
-    if not database_url:
-        raise ValueError("DATABASE_URL não encontrada.")
+    if os.getenv("ENV") == "production":
+        # Railway usa DATABASE_URL do PostgreSQL
+        url = os.getenv("DATABASE_URL")
+        if not url:
+            print("❌ DATABASE_URL não encontrada.")
+            return None
 
-    result = urlparse(database_url)
+        result = urlparse(url)
+        print("🔍 DEBUG DB:")
+        print("Host:", result.hostname)
+        print("User:", result.username)
+        print("DB:", result.path.lstrip('/'))
+        print("Port:", result.port)
 
-    db_name = result.path.lstrip('/')
-    db_user = result.username
-    db_password = result.password
-    db_host = result.hostname
-    db_port = result.port or 5432
+        try:
+            conn = psycopg2.connect(
+                dbname=result.path.lstrip('/'),
+                user=result.username,
+                password=result.password,
+                host=result.hostname,
+                port=result.port
+            )
+            print("✅ Conexão com o PostgreSQL (Railway) estabelecida.")
+            return conn
+        except Exception as e:
+            print(f"❌ Erro ao conectar ao PostgreSQL: {e}")
+            return None
 
-    print(f"🔍 DEBUG DB:\nHost: {db_host}\nUser: {db_user}\nDB: {db_name}\nPort: {db_port}")
-
-    try:
-        conn = psycopg2.connect(
-            dbname=db_name,
-            user=db_user,
-            password=db_password,
-            host=db_host,
-            port=db_port,
-            sslmode='require'  # Railway exige SSL em alguns casos
-        )
-        print("✅ Conexão com o banco de dados estabelecida.")
-        return conn
-    except Exception as e:
-        print(f"❌ Erro ao conectar ao banco de dados: {e}")
-        return None
+    else:
+        # Conexão local usando MySQL
+        try:
+            conn = mysql.connector.connect(
+                host=os.getenv("DB_HOST", "localhost"),
+                user=os.getenv("DB_USER", "root"),
+                password=os.getenv("DB_PASSWORD", ""),
+                database=os.getenv("DB_NAME", "twitch")
+            )
+            print("✅ Conexão com o MySQL (local) estabelecida.")
+            return conn
+        except Exception as e:
+            print(f"❌ Erro ao conectar ao MySQL local: {e}")
+            return None
