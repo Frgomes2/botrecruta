@@ -13,14 +13,14 @@ class DadoComando(commands.Cog):
         try:
             with self.bot.db_connection.cursor() as cursor:
                 cursor.execute(""" 
-                    CREATE TABLE IF NOT EXISTS usuarios (
+                    CREATE TABLE IF NOT EXISTS tb_usuarios_twtich (
                         id_twitch VARCHAR(255) PRIMARY KEY,
                         nome_usuario VARCHAR(255),
                         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
                 cursor.execute(""" 
-                    CREATE TABLE IF NOT EXISTS placar (
+                    CREATE TABLE IF NOT EXISTS tb_placar_dado (
                         jogador_id VARCHAR(255),
                         adversario_id VARCHAR(255),
                         vitorias INT DEFAULT 0,
@@ -37,8 +37,8 @@ class DadoComando(commands.Cog):
             with self.bot.db_connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT u.nome_usuario, SUM(p.vitorias) AS vitorias
-                    FROM placar p
-                    JOIN usuarios u ON p.jogador_id = u.id_twitch
+                    FROM tb_placar_dado p
+                    JOIN tb_usuarios_twtich u ON p.jogador_id = u.id_twitch
                     GROUP BY u.nome_usuario
                     ORDER BY vitorias DESC
                     LIMIT 3
@@ -74,10 +74,10 @@ class DadoComando(commands.Cog):
                 return
 
             with self.bot.db_connection.cursor() as cursor:
-                cursor.execute("SELECT SUM(vitorias) FROM placar WHERE jogador_id = %s", (id_usuario,))
+                cursor.execute("SELECT SUM(vitorias) FROM tb_placar_dado WHERE jogador_id = %s", (id_usuario,))
                 vitorias = cursor.fetchone()[0] or 0
 
-                cursor.execute("SELECT SUM(vitorias) FROM placar WHERE adversario_id = %s", (id_usuario,))
+                cursor.execute("SELECT SUM(vitorias) FROM tb_placar_dado WHERE adversario_id = %s", (id_usuario,))
                 derrotas = cursor.fetchone()[0] or 0
 
             await ctx.send(f"📊 Placar de {nome_usuario}: {vitorias} vitórias e {derrotas} derrotas.")
@@ -123,16 +123,16 @@ class DadoComando(commands.Cog):
 
         with self.bot.db_connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO placar (jogador_id, adversario_id, vitorias)
+                INSERT INTO tb_placar_dado (jogador_id, adversario_id, vitorias)
                 VALUES (%s, %s, 1)
                 ON CONFLICT (jogador_id, adversario_id)
-                DO UPDATE SET vitorias = placar.vitorias + 1
+                DO UPDATE SET vitorias = tb_placar_dado.vitorias + 1
             """, (vencedor_id, perdedor_id))
 
-            cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_autor, id_parceiro))
+            cursor.execute("SELECT vitorias FROM tb_placar_dado WHERE jogador_id = %s AND adversario_id = %s", (id_autor, id_parceiro))
             v1 = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT vitorias FROM placar WHERE jogador_id = %s AND adversario_id = %s", (id_parceiro, id_autor))
+            cursor.execute("SELECT vitorias FROM tb_placar_dado WHERE jogador_id = %s AND adversario_id = %s", (id_parceiro, id_autor))
             v2 = cursor.fetchone()[0] or 0
 
         self.bot.db_connection.commit()
@@ -156,7 +156,7 @@ class DadoComando(commands.Cog):
         try:
             with self.bot.db_connection.cursor() as cursor:
                 cursor.execute("""
-                    INSERT INTO usuarios (id_twitch, nome_usuario)
+                    INSERT INTO tb_usuarios_twtich (id_twitch, nome_usuario)
                     VALUES (%s, %s)
                     ON CONFLICT (id_twitch)
                     DO UPDATE SET nome_usuario = EXCLUDED.nome_usuario
