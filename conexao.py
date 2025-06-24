@@ -1,17 +1,20 @@
 import os
 from urllib.parse import urlparse
 
-# Banco MySQL
-import mysql.connector
+# Detecta ambiente
+env = os.getenv("ENV", "development")
 
-# Banco PostgreSQL
-import psycopg2
+# Importações condicionais conforme o ambiente
+if env == "production":
+    import psycopg2
+else:
+    import mysql.connector
 
 def conectar_postgresql():
-    print("🔍 DEBUG ENV:", os.getenv("ENV"))
+    print("🔍 DEBUG ENV:", env)
 
-    if os.getenv("ENV") == "production":
-        # Railway usa DATABASE_URL do PostgreSQL
+    if env == "production":
+        # Conexão para o Railway com PostgreSQL
         url = os.getenv("DATABASE_URL")
         if not url:
             print("❌ DATABASE_URL não encontrada.")
