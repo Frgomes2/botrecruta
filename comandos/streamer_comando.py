@@ -6,7 +6,7 @@ class StreamerComando(commands.Cog):
         self.bot = bot
 
     @commands.command(name='streamer')
-    async def streamer(self, ctx, *, alvo: str = None):
+    async def streamer(self, ctx, *, alvo: str = None): 
         try:
             alvo = alvo or ctx.author.name
             db_connection = self.bot.db_connection
