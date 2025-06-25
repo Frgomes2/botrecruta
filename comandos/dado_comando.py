@@ -32,7 +32,7 @@ class DadoComando(commands.Cog):
                         id_twitch VARCHAR(255) PRIMARY KEY,
                         nome_usuario VARCHAR(255) NOT NULL,
                         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         INDEX idx_nome_usuario (nome_usuario)
                     )
                 """)
@@ -267,7 +267,8 @@ class DadoComando(commands.Cog):
             cursor.execute("""
                 INSERT INTO tb_placar_dado (jogador_id, adversario_id, vitorias)
                 VALUES (%s, %s, 1)
-                ON DUPLICATE KEY UPDATE vitorias = vitorias + 1
+                ON CONFLICT (jogador_id, adversario_id) DO UPDATE
+                SET vitorias = tb_placar_dado.vitorias + 1
             """, (vencedor_id, perdedor_id))
         self.bot.db_connection.commit()
 
@@ -278,18 +279,19 @@ class DadoComando(commands.Cog):
             cursor.execute("""
                 INSERT INTO tb_estatisticas_dado (usuario_id, total_jogos, total_vitorias)
                 VALUES (%s, 1, %s)
-                ON DUPLICATE KEY UPDATE 
-                    total_jogos = total_jogos + 1,
-                    total_vitorias = total_vitorias + VALUES(total_vitorias)
+                ON CONFLICT (usuario_id) DO UPDATE
+                SET 
+                total_jogos = tb_estatisticas_dado.total_jogos + 1,
+                total_vitorias = tb_estatisticas_dado.total_vitorias + EXCLUDED.total_vitorias
             """, (id_autor, 1 if autor_ganhou else 0))
-            
-            # Atualizar estatísticas do parceiro
+
             cursor.execute("""
                 INSERT INTO tb_estatisticas_dado (usuario_id, total_jogos, total_vitorias)
                 VALUES (%s, 1, %s)
-                ON DUPLICATE KEY UPDATE 
-                    total_jogos = total_jogos + 1,
-                    total_vitorias = total_vitorias + VALUES(total_vitorias)
+                ON CONFLICT (usuario_id) DO UPDATE
+                SET 
+                total_jogos = tb_estatisticas_dado.total_jogos + 1,
+                total_vitorias = tb_estatisticas_dado.total_vitorias + EXCLUDED.total_vitorias
             """, (id_parceiro, 0 if autor_ganhou else 1))
             
         self.bot.db_connection.commit()
@@ -329,8 +331,8 @@ class DadoComando(commands.Cog):
                 cursor.execute("""
                     INSERT INTO tb_usuarios_twitch (id_twitch, nome_usuario)
                     VALUES (%s, %s)
-                    ON DUPLICATE KEY UPDATE nome_usuario = VALUES(nome_usuario)
+                    ON CONFLICT (id_twitch) DO UPDATE
+                    SET nome_usuario = EXCLUDED.nome_usuario
                 """, (id_twitch, nome_usuario))
-            self.bot.db_connection.commit()
         except Exception as e:
             logging.error(f"Erro ao atualizar usuário {nome_usuario}: {e}")
