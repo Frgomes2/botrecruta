@@ -23,21 +23,22 @@ class DadoComando(commands.Cog):
         self._setup_database()
 
     def _setup_database(self) -> None:
-        """Configura as tabelas necessárias no banco de dados."""
         try:
             with self.bot.db_connection.cursor() as cursor:
-                # Tabela de usuários com índices adicionais
                 cursor.execute(""" 
                     CREATE TABLE IF NOT EXISTS tb_usuarios_twitch (
                         id_twitch VARCHAR(255) PRIMARY KEY,
                         nome_usuario VARCHAR(255) NOT NULL,
                         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        INDEX idx_nome_usuario (nome_usuario)
-                    )
+                    );
                 """)
-                
-                # Tabela de placar com constraints melhoradas
+
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_nome_usuario 
+                    ON tb_usuarios_twitch (nome_usuario);
+                """)
+
                 cursor.execute(""" 
                     CREATE TABLE IF NOT EXISTS tb_placar_dado (
                         jogador_id VARCHAR(255) NOT NULL,
@@ -46,19 +47,18 @@ class DadoComando(commands.Cog):
                         PRIMARY KEY (jogador_id, adversario_id),
                         FOREIGN KEY (jogador_id) REFERENCES tb_usuarios_twitch(id_twitch) ON DELETE CASCADE,
                         FOREIGN KEY (adversario_id) REFERENCES tb_usuarios_twitch(id_twitch) ON DELETE CASCADE
-                    )
+                    );
                 """)
-                
-                # Tabela de estatísticas adicionais
+
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS tb_estatisticas_dado (
                         usuario_id VARCHAR(255) PRIMARY KEY,
                         total_jogos INT DEFAULT 0,
                         total_vitorias INT DEFAULT 0,
                         FOREIGN KEY (usuario_id) REFERENCES tb_usuarios_twitch(id_twitch) ON DELETE CASCADE
-                    )
+                    );
                 """)
-                
+
             self.bot.db_connection.commit()
             logging.info("Tabelas criadas/verificadas com sucesso")
         except Exception as err:
