@@ -218,7 +218,7 @@ class DadoComando(commands.Cog):
             cursor.execute("""
                 SELECT nome_usuario FROM tb_usuarios_twitch
                 WHERE LOWER(nome_usuario) != %s
-                ORDER BY RAND()
+                ORDER BY RANDOM()
                 LIMIT 1
             """, (ctx.author.name.lower(),))
             resultado = cursor.fetchone()
