@@ -1,0 +1,100 @@
+2025-06-24 21:01:35,472 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:01:37,343 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:03:49,782 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:03:51,669 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:08:45,537 - ERROR - Erro ao executar o comando jogador: 1305 (42000): FUNCTION twitch.RANDOM does not exist
+2025-06-24 21:09:39,213 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:09:41,106 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:09:51,613 - ERROR - Erro ao executar o comando !jogador: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 705, in cmd_query
+    self._cmysql.query(
+_mysql_connector.MySQLInterfaceError: Table 'twitch.mensagens' doesn't exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\botrecruta\comandos\jogador_comando.py", line 31, in jogador
+    cursor.execute("""
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\cursor_cext.py", line 357, in execute
+    result = self._connection.cmd_query(
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 713, in cmd_query
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+2025-06-24 21:10:00,215 - ERROR - Erro ao executar o comando !jogador: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 705, in cmd_query
+    self._cmysql.query(
+_mysql_connector.MySQLInterfaceError: Table 'twitch.mensagens' doesn't exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\botrecruta\comandos\jogador_comando.py", line 31, in jogador
+    cursor.execute("""
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\cursor_cext.py", line 357, in execute
+    result = self._connection.cmd_query(
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 713, in cmd_query
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+2025-06-24 21:10:04,673 - ERROR - Erro ao executar o comando !jogador: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 705, in cmd_query
+    self._cmysql.query(
+_mysql_connector.MySQLInterfaceError: Table 'twitch.mensagens' doesn't exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\botrecruta\comandos\jogador_comando.py", line 31, in jogador
+    cursor.execute("""
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\cursor_cext.py", line 357, in execute
+    result = self._connection.cmd_query(
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 713, in cmd_query
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1146 (42S02): Table 'twitch.mensagens' doesn't exist
+2025-06-24 21:10:34,783 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:10:36,682 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:10:47,175 - ERROR - Erro ao executar o comando !jogador: 1054 (42S22): Unknown column 'tb_mensagens' in 'field list'
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 705, in cmd_query
+    self._cmysql.query(
+_mysql_connector.MySQLInterfaceError: Unknown column 'tb_mensagens' in 'field list'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\botrecruta\comandos\jogador_comando.py", line 31, in jogador
+    cursor.execute("""
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\cursor_cext.py", line 357, in execute
+    result = self._connection.cmd_query(
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python38\lib\site-packages\mysql\connector\connection_cext.py", line 713, in cmd_query
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1054 (42S22): Unknown column 'tb_mensagens' in 'field list'
+2025-06-24 21:11:10,212 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:11:12,069 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:11:21,370 - ERROR - Erro ao executar o comando !jogador: 'int' object has no attribute 'format'
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\botrecruta\comandos\jogador_comando.py", line 41, in jogador
+    mensagem = msg_row[0].format(alvo=alvo, jogador=jogador, porcentagem=porcentagem)
+AttributeError: 'int' object has no attribute 'format'
+2025-06-24 21:12:39,214 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:12:41,091 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:14:15,708 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:14:17,583 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:17:28,446 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:17:30,342 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:18:59,194 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:19:01,078 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:22:46,076 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:22:47,934 - INFO - Successfully logged onto Twitch WS: botrecruta
+2025-06-24 21:23:52,111 - INFO - Tabelas criadas/verificadas com sucesso
+2025-06-24 21:23:53,971 - INFO - Successfully logged onto Twitch WS: botrecruta

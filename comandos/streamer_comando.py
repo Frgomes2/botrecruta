@@ -28,7 +28,7 @@ class StreamerComando(commands.Cog):
 
             cursor.execute("""
                 SELECT mensagem  
-                FROM mensagens 
+                FROM tb_mensagens 
                 WHERE tipo_funcao = 'streamer' 
                 AND min_porcentagem <= %s 
                 AND max_porcentagem >= %s 

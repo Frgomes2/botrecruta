@@ -60,6 +60,14 @@ class MyBot(commands.Bot):
         print(f"🤖 Bot conectado como {self.nick}")
 
     async def event_message(self, message):
+        # Proteção contra mensagens sem autor
+        if not message or not getattr(message, 'author', None) or not getattr(message.author, 'name', None):
+            return
+
+        # Ignora mensagens do próprio bot
+        if message.author.name.lower() == self.nick.lower():
+            return
+
         await self.handle_commands(message)
 
     def run(self):
