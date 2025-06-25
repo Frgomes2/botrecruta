@@ -151,7 +151,7 @@ class DadoComando(commands.Cog):
             await ctx.send("❌ Ocorreu um erro ao buscar o placar.")
 
     @commands.command(name='dado', aliases=['rolardado'])
-    async def dado(self, ctx: commands.Context, oponente: Optional[str] = None) -> None:
+    async def dado(self, ctx: commands.Context, oponente: str = None) -> None:
         """Rola um dado contra outro usuário ou um oponente aleatório."""
         try:
             # Determinar oponente
