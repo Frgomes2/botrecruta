@@ -19,7 +19,7 @@ DEFAULT_BLOCKED_USERS = {"botrecruta", "nightbot", "streamelements", "streamlabs
 
 class DadoComando(commands.Cog):
     def __init__(self, bot: commands.Bot):
-        self.bot = bot
+        self.bot = bot   
         self._setup_database()
 
     def _setup_database(self) -> None:
